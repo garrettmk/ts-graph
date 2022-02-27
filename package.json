@@ -1,0 +1,30 @@
+{
+  "name": "ts-graph",
+  "version": "1.0.0",
+  "description": "A library of pure functions for manipulating graphs, in TypeScript!",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/garrettmk/ts-graph.git"
+  },
+  "keywords": [
+    "typescript",
+    "javascript",
+    "graph"
+  ],
+  "author": "Garrett Myrick",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/garrettmk/ts-graph/issues"
+  },
+  "homepage": "https://github.com/garrettmk/ts-graph#readme",
+  "devDependencies": {
+    "jest": "^27.5.1",
+    "ts-jest": "^27.1.3",
+    "typescript": "^4.5.5"
+  }
+}
