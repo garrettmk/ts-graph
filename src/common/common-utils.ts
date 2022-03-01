@@ -131,10 +131,3 @@ export function splitObject<T extends {}, TK extends keyof T>(obj: T, keys: TK[]
 
   return [kept, other];
 }
-
-type Thing = {
-  name: string,
-  serial: number
-}
-
-type EntriesOfThing = Entry<Thing>

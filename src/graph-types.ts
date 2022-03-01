@@ -4,7 +4,9 @@ import { DiscriminateUnion, Entity, ID, OneKey } from '@/common';
 export type Node = 
   & Entity 
   & { type: string }
-  & { [key: string]: any }
+  & Record<string, any>
+  & Record<number | symbol, never>
+
 
 // An edge has a "from" ID, a "to" ID, and a type
 export type Edge = {
@@ -15,17 +17,13 @@ export type Edge = {
 
 // We can describe the relationships between nodes using a map,
 // e.g. { authors: { documents: { to: 'document', type: 'writes' } }
-// export type Relations<TGraph extends Graph> = {
-//   [NodeTypeKey in NodeType<TGraph>['type']]: NodeRelations<TGraph>
-// }
-export type Relations<TNode extends Node, TEdge extends Edge> = Record<TNode['type'], NodeRelations<TNode, TEdge>>
+export type Relations<TNode extends Node, TEdge extends Edge> = 
+  & Record<TNode['type'], NodeRelations<TNode, TEdge>>
 
 // Relations for a type are described using a map of a property
 // key to a relation descriptor
-// export type NodeRelations<TGraph extends Graph> = {
-//   [RelationKey: string]: Relation<TGraph>
-// }
-export type NodeRelations<TNode extends Node, TEdge extends Edge> = Record<string, Relation<TNode, TEdge>>
+export type NodeRelations<TNode extends Node, TEdge extends Edge> = 
+  & Record<string, Relation<TNode, TEdge>>
 
 // A relation descriptor includes the direction (from/to), the type
 // of node to relate to, and the type of edge to use
@@ -75,7 +73,8 @@ export type RelationsType<TGraph extends Graph> = TGraph['relations'];
 
 export type SpecificNodeType<TGraph extends Graph, TypeKey extends string> = DiscriminateUnion<NodeType<TGraph>, 'type', TypeKey>;
 export type SpecificEdgeType<TGraph extends Graph, TypeKey extends string> = DiscriminateUnion<EdgeType<TGraph>, 'type', TypeKey>;
-export type RelationsForType<TGraph extends Graph, TN extends NodeType<TGraph>> = RelationsType<TGraph>[TN['type']];
+export type RelationsForTypeKey<TGraph extends Graph, TypeKey extends NodeType<TGraph>['type']> = RelationsType<TGraph>[TypeKey];
+export type RelationsForType<TGraph extends Graph, TN extends NodeType<TGraph>> = RelationsForTypeKey<TGraph, TN['type']>;
 export type SpecificRelation<TGraph extends Graph, TN extends NodeType<TGraph>, PropKey extends keyof RelationsForType<TGraph, TN>> = RelationsForType<TGraph, TN>[PropKey];
 
 export type RelatedTypeKey<R> =
