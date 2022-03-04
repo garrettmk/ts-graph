@@ -1,7 +1,7 @@
-import { getNonRelationFields, getRelationFields } from ".";
-import { ID, MaybeArray, splitObject } from "./common";
+import { omitRelationFields, pickRelationFields } from ".";
+import { ID, MaybeArray } from "./common";
 import { Edge, Graph, Node, NodeRef, NodeType, RelatedType, RelationsForType } from "./graph-types";
-import { addEdge, addNode, addType, getRelation, getRelationsForType, hasNodeId, makeEdge, parseRelation } from './graph-utils';
+import { addEdge, addNode, addType, getRelation, hasNodeId, makeEdge, parseRelation } from './graph-utils';
 
 
 export type CreateInput<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>> =
@@ -36,8 +36,8 @@ export function create<TGraph extends Graph>(graph: TGraph, input: MaybeArray<Cr
     return input.reduce((result, inp) => create(result, inp, createEdge), graph);
 
   const { type } = input;
-  const createNodeFields = getNonRelationFields<CreateNodeFields<TGraph>>(graph, type, input);
-  const createRelationFields = getRelationFields<CreateRelationFields<TGraph>>(graph, type, input);
+  const createNodeFields = omitRelationFields<CreateNodeFields<TGraph>>(graph, type, input);
+  const createRelationFields = pickRelationFields<CreateRelationFields<TGraph>>(graph, type, input);
   const node = addId(graph, createNodeFields);
   graph = addNode(graph, node);
 

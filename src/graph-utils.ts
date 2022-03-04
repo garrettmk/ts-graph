@@ -1,6 +1,5 @@
-import { RelationsForTypeKey } from ".";
-import { AlreadyExistsError, ID, NotFoundError, MaybeArray, splitObject } from "./common";
-import { Edge, EdgeType, Graph, Node, NodeType, ParsedRelation, Relation, RelationsForType, RelationsType } from "./graph-types";
+import { AlreadyExistsError, ID, MaybeArray, NotFoundError, omit, pick } from "./common";
+import { Edge, EdgeType, Graph, Node, NodeType, ParsedRelation, Relation, RelationsType } from "./graph-types";
 
 
 function withSameId(node: Node) {
@@ -158,15 +157,15 @@ export function addType<TIn extends {}, TOut extends { type: string } & TIn>(typ
 
 // Return just the fields of an object that are listed in the relations
 // for that type
-export function getRelationFields<TOutput>(graph: Graph, type: string, input: any) : TOutput {
+export function pickRelationFields<TOutput>(graph: Graph, type: string, input: any) : TOutput {
   const relationKeys = Object.keys(getRelationsForType(graph, type));
-  const [relationFields] = splitObject(input, relationKeys);
+  const relationFields = pick(input, relationKeys);
   return relationFields as TOutput;
 }
 
 // Return everything BUT the relation fields
-export function getNonRelationFields<TOutput>(graph: Graph, type: string, input: any) : TOutput {
+export function omitRelationFields<TOutput>(graph: Graph, type: string, input: any) : TOutput {
   const relationKeys = Object.keys(getRelationsForType(graph, type));
-  const [, nonRelationFields] = splitObject(input, relationKeys);
+  const nonRelationFields = omit(input, relationKeys);
   return nonRelationFields as TOutput;
 }
