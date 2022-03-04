@@ -1,4 +1,4 @@
-import { ArrayOperator, EntityQuery, matchesEntityQuery, MaybeArray, parseOperator, splitObject, ValidationError, EntityQueryFields } from "./common";
+import { ArrayOperator, EntityQuery, matchesEntityQuery, MaybeArray, parseOperator, pick, omit, ValidationError, EntityQueryFields } from "./common";
 import { Node, Graph, NodeType, RelatedType, RelationsForType } from "./graph-types";
 import { getNode, getRelation, getRelationsForType, parseRelation } from './graph-utils';
 
@@ -49,14 +49,14 @@ export function findNodes<TGraph extends Graph, TN extends NodeType<TGraph>>(gra
 // Return the EntityQuery portion of a query
 export function getEntityQueryFields<TGraph extends Graph>(graph: TGraph, type: NodeType<TGraph>['type'], input: NodeQueryFields<TGraph>): EntityQuery<NodeType<TGraph>> {
   const relationKeys = Object.keys(getRelationsForType(graph, type));
-  const [, entityQuery] = splitObject(input, relationKeys);
+  const entityQuery = omit(input, relationKeys);
   return entityQuery as EntityQuery<NodeType<TGraph>>;
 }
 
 // Return the relation query fields portion of a query
 export function getRelationQueryFields<TGraph extends Graph>(graph: TGraph, type: NodeType<TGraph>['type'], input: NodeQueryFields<TGraph>): RelationQueryFields<TGraph, NodeType<TGraph>> {
   const relationKeys = Object.keys(getRelationsForType(graph, type));
-  const [relationFields] = splitObject(input, relationKeys);
+  const relationFields = pick(input, relationKeys);
   return relationFields;
 }
 

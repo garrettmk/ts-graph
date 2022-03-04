@@ -34,8 +34,9 @@ export type StringOperator =
   | { empty: boolean };
 
 export type ArrayOperator<T = any> =
+  | { empty: boolean }
   | { length: number | NumericOperator }
-  | { includes: T }
+  | { includes: T | T[] }
 
 export type GenericOperator<T = any> =
   | { eq: T }
@@ -44,7 +45,7 @@ export type GenericOperator<T = any> =
 export type EntityQueryOperator<T = any> =
   T extends number ? NumericOperator :
   T extends string ? StringOperator : 
-  T extends any[] ? ArrayOperator<T> :
+  T extends any[] ? ArrayOperator<T[0]> :
   GenericOperator<T>;
 
 export type EntityQueryOperatorKey<T extends EntityQueryOperator<any> = EntityQueryOperator<any>> =

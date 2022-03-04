@@ -1,5 +1,5 @@
-import { getNonRelationFields, getRelationFields } from '.';
-import { ID, MaybeArray } from './common';
+import { omitRelationFields, pickRelationFields } from '.';
+import { MaybeArray } from './common';
 import { findNodes, NodeQueryFields, Query } from './graph-query';
 import { Graph, Node, NodeType, RelatedType, RelationsForType } from './graph-types';
 import { addEdge, addType, getRelation, hasEdge, makeEdge, parseRelation, removeEdge, replaceNode } from './graph-utils';
@@ -32,8 +32,8 @@ export type UpdateRelationField<
 
 export function update<TGraph extends Graph>(graph: TGraph, query: Query<TGraph>, updates: UpdateInput<TGraph>): TGraph {
   const nodes = findNodes(graph, query);
-  const updateNodeFields = getNonRelationFields<UpdateValueFields<NodeType<TGraph>>>(graph, query.type, updates);
-  const updateRelationsFields = getRelationFields<UpdateRelationFields<TGraph>>(graph, query.type, updates);
+  const updateNodeFields = omitRelationFields<UpdateValueFields<NodeType<TGraph>>>(graph, query.type, updates);
+  const updateRelationsFields = pickRelationFields<UpdateRelationFields<TGraph>>(graph, query.type, updates);
 
   graph = nodes.reduce(
     (result, node) => {

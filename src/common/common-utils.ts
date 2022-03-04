@@ -1,5 +1,5 @@
-import { ID, Entity, EntityQuery, EntityQueryOperator, ParsedQueryOperator } from "@/common";
-import { ValidationError, NotImplementedError } from "@/common/common-errors";
+import { Entity, EntityQuery, EntityQueryOperator, ID, ParsedQueryOperator } from "@/common";
+import { NotImplementedError, ValidationError } from "@/common/common-errors";
 
 
 export function isId(value: any) : value is ID {
@@ -41,11 +41,7 @@ function matchesEntityQueryField<T>(queryField: T | T[] | EntityQueryOperator<T>
   }
 
   else if (typeof queryField === 'object') {
-    const [opKey, opDir] = Object.entries(queryField as EntityQueryOperator<T>)[0];
-    switch (opKey as keyof EntityQueryOperator<T>) {
-      case 'not':
-        return value !== opDir;
-    }
+    return matchesOperator(value, queryField as EntityQueryOperator<T>);
   }
 
   throw new ValidationError(`Invalid query field: ${queryField}`, ['0'], ['primitive', 'array', 'QueryOperator'], queryField);
@@ -78,7 +74,7 @@ export function matchesOperator(value: any, operator: EntityQueryOperator) : boo
       return (rvalue as RegExp).test(value);
 
     case 'empty':
-      return (value as any[]).length === 0 && rvalue;
+      return ((value as any[]).length === 0) === rvalue;
 
     case 'length': {
       const length = (value as any[]).length;
@@ -88,8 +84,12 @@ export function matchesOperator(value: any, operator: EntityQueryOperator) : boo
         return length === rvalue;
     }
 
-    case 'includes':
-      return (value as any[]).includes(rvalue);
+    case 'includes': {
+      if (Array.isArray(rvalue))
+        return (value as any[]).some(v => rvalue.includes(v));
+      else
+        return (value as any[]).includes(rvalue);
+    }
 
     default:
       throw new NotImplementedError(`Unknown operator: ${JSON.stringify(operator)}`);
@@ -98,36 +98,23 @@ export function matchesOperator(value: any, operator: EntityQueryOperator) : boo
 
 // Put an operator into a more convienent form to work with
 export function parseOperator<TOp extends EntityQueryOperator<any>>(operator: TOp) : ParsedQueryOperator<TOp> {
-  const entries = objectEntries(operator);
+  const entries = Object.entries(operator);
   if (entries.length !== 1)
     throw new ValidationError(`Not a valid operator: ${JSON.stringify(operator)}`, ['0'], 'ValueQueryOperator<any>', operator);
+  
+  const [key, rvalue] = entries[0];
 
-  return {
-    key: entries[0],
-    rvalue: entries[1]
-  } as unknown as ParsedQueryOperator<TOp>;
+  return { key, rvalue } as unknown as ParsedQueryOperator<TOp>;
 }
 
-
-// A version of Object.entries() with better type support
-// export type Entry<T extends {}, K extends keyof T = keyof T> =
-//   K extends number ? never :
-//   K extends symbol ? never :
-//   K extends keyof T ? [K, T[K]] : never;
-export type Entry<T extends {}, K extends keyof T = keyof T> = [K, T[K]]
-
-export type Entries<T extends {}> = Entry<T>[];
-
-export function objectEntries<T extends {}>(obj: T) : Entries<T> {
-  return Object.entries(obj) as unknown as Entries<T>;
+export function pick<T extends {}, K extends keyof T>(obj: T, keys: Readonly<K[]>) : Pick<T, K> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([key]) => keys.includes(key as K))
+  ) as Pick<T, K>;
 }
 
-
-// Split an object into two
-export function splitObject<T extends {}, TK extends keyof T>(obj: T, keys: TK[]) : [Pick<T, TK>, Omit<T, TK>] {
-  const entries = Object.entries(obj);
-  const kept = Object.fromEntries(entries.filter(([key]) => keys.includes(key as TK))) as Pick<T, TK>;
-  const other = Object.fromEntries(entries.filter(([key]) => !keys.includes(key as TK))) as Omit<T, TK>;
-
-  return [kept, other];
+export function omit<T extends {}, K extends keyof T>(obj: T, keys: Readonly<K[]>) : Omit<T, K> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([key]) => !keys.includes(key as K))
+  ) as Omit<T, K>;
 }
