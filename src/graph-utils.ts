@@ -1,3 +1,4 @@
+import { NodeRef } from ".";
 import { AlreadyExistsError, ID, MaybeArray, NotFoundError, omit, pick } from "./common";
 import { Edge, EdgeType, Graph, Node, NodeType, ParsedRelation, Relation, RelationsType } from "./graph-types";
 
@@ -120,8 +121,8 @@ export function makeEdge<TGraph extends Graph>(node: NodeType<TGraph>, relation:
   const { direction, otherDirection, edgeType } = parseRelation(relation);
 
   return {
-    [direction]: relatedNode,
-    [otherDirection]: node,
+    [direction]: relatedNode.id,
+    [otherDirection]: node.id,
     type: edgeType
   } as EdgeType<TGraph>;
 }
@@ -168,4 +169,27 @@ export function omitRelationFields<TOutput>(graph: Graph, type: string, input: a
   const relationKeys = Object.keys(getRelationsForType(graph, type));
   const nonRelationFields = omit(input, relationKeys);
   return nonRelationFields as TOutput;
+}
+
+// Return true if the input is a NodeRef
+export function isNodeRef(input: any) : input is NodeRef {
+  return typeof input === 'object' &&
+    input !== null &&
+    Object.keys(input).length === 1 &&
+    'id' in input;
+}
+
+// Return true if the input is NOT a NodeRef
+export function isNotNodeRef(input: any) : boolean {
+  return !isNodeRef(input);
+}
+
+// Pipe a graph through a series of functions and return the result
+export type GraphTransformFn<TGraph extends Graph> = (input: TGraph) => TGraph;
+
+export function pipe<TGraph extends Graph>(graph: TGraph, ...fns: GraphTransformFn<TGraph>[]) : TGraph {
+  return fns.reduce(
+    (result, transform) => transform(result),
+    graph
+  );
 }

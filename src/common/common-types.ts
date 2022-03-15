@@ -5,6 +5,9 @@ export type DiscriminateUnion<T, K extends keyof T, V extends T[K]> =
 
 export type MaybeArray<T> = T | T[];
 
+export type MaybeArrayType<T> = T extends (infer Item)[] ? Item : T;
+
+
 export type OneKey<K extends string, V = any> = {
   [P in K]: (Record<P, V> &
       Partial<Record<Exclude<K, P>, never>>) extends infer O

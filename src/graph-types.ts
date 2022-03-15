@@ -4,8 +4,8 @@ import { DiscriminateUnion, Entity, ID, OneKey } from '@/common';
 export type Node = 
   & Entity 
   & { type: string }
-  & Record<string, any>
-  & Record<number | symbol, never>
+  // & Record<string, any>
+  // & Record<number | symbol, never>
 
 
 // An edge has a "from" ID, a "to" ID, and a type

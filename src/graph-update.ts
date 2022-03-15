@@ -30,7 +30,7 @@ export type UpdateRelationField<
 
 
 
-export function update<TGraph extends Graph>(graph: TGraph, query: Query<TGraph>, updates: UpdateInput<TGraph>): TGraph {
+export function update<TGraph extends Graph, TN extends NodeType<TGraph>>(graph: TGraph, query: Query<TGraph, TN>, updates: UpdateInput<TGraph, TN>): TGraph {
   const nodes = findNodes(graph, query);
   const updateNodeFields = omitRelationFields<UpdateValueFields<NodeType<TGraph>>>(graph, query.type, updates);
   const updateRelationsFields = pickRelationFields<UpdateRelationFields<TGraph>>(graph, query.type, updates);

@@ -1,4 +1,4 @@
-import { matchesEntityQuery, matchesOperator, omit, parseOperator, pick } from "..";
+import { ensureArray, matchesEntityQuery, matchesOperator, omit, parseOperator, pick } from "..";
 
 
 describe('testing omit()', () => {
@@ -167,5 +167,25 @@ describe('testing matchesEntityQuery()', () => {
     { type: 'fish', name: 'roger' },
   ])('should return false for the query %s', query => {
     expect(matchesEntityQuery(obj, query)).toBe(false);
+  })
+});
+
+
+describe('testing ensureArray()', () => {
+  it('should return an array with one item, if the input is not an array', () => {
+    const input = 'hello';
+    const expected = ['hello'];
+
+    const result = ensureArray(input);
+
+    expect(result).toMatchObject(expected);
+  });
+
+  it('should return the input unchanged if the input is an array', () => {
+    const input = ['hello'];
+
+    const result = ensureArray(input);
+
+    expect(result).toBe(input);
   })
 })

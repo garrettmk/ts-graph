@@ -1,5 +1,6 @@
 import { Entity, EntityQuery, EntityQueryOperator, ID, ParsedQueryOperator } from "@/common";
 import { NotImplementedError, ValidationError } from "@/common/common-errors";
+import { MaybeArray, MaybeArrayType } from "..";
 
 
 export function isId(value: any) : value is ID {
@@ -117,4 +118,8 @@ export function omit<T extends {}, K extends keyof T>(obj: T, keys: Readonly<K[]
   return Object.fromEntries(
     Object.entries(obj).filter(([key]) => !keys.includes(key as K))
   ) as Omit<T, K>;
+}
+
+export function ensureArray<T>(input: T | T[]) : T[] {
+  return Array.isArray(input) ? input : [input];
 }
