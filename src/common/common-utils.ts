@@ -1,10 +1,15 @@
+/**
+ * @module
+ * 
+ * Various utility functions used by `ts-graph`. These are not graph-related.
+ */
+
 import { Entity, EntityQuery, EntityQueryOperator, ID, ParsedQueryOperator } from "@/common";
 import { NotImplementedError, ValidationError } from "@/common/common-errors";
-import { MaybeArray, MaybeArrayType } from "..";
 
 
 export function isId(value: any) : value is ID {
-  return typeof value === 'string';
+  return typeof value === 'string' && value.length > 0;
 }
 
 export function isIdList(value: any) : value is ID[] {
@@ -17,7 +22,19 @@ export function isEntityQuery(value: any) : value is EntityQuery<any> {
 }
 
 
-// Match an Entity against an EntityQuery
+/**
+ * @param entity The object to test
+ * @param query The query to match
+ * @returns True if the object matches the query
+ * 
+ * *Example:*
+ * ```typescript
+ * const entity = { id: 'one', name: 'Bob' };
+ * const query = { name: { re: /b/i } };
+ * 
+ * const result = matchesEntityQuery(entity, query);  // true
+ * ```
+ */
 export function matchesEntityQuery<TEntity extends Entity>(entity: TEntity, query: EntityQuery<TEntity>) : boolean {
   if (Array.isArray(query)) {
     const results = query.map(subquery => matchesEntityQuery(entity, subquery));
