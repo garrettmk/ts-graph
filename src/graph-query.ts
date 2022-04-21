@@ -39,10 +39,7 @@ export type RelationQueryField<TGraph extends Graph, TN extends NodeType<TGraph>
 // Return a list of nodes matching a query
 export function findNodes<TGraph extends Graph, TN extends NodeType<TGraph>>(graph: TGraph, query: MaybeArray<Query<TGraph, TN>>): TN[] {
   if (Array.isArray(query))
-    return query.reduce(
-      (result, q) => result.concat(findNodes(graph, q)),
-      [] as TN[]
-    );
+    return query.flatMap(q => findNodes(graph, q));
 
   return graph.nodes.filter(node => matchesNodeQuery(graph, node, query)) as TN[];
 }
@@ -63,9 +60,8 @@ export function getRelationQueryFields<TGraph extends Graph>(graph: TGraph, type
 
 // Return true if the node matches all fields
 export function matchesRelationQueryFields<TGraph extends Graph>(graph: TGraph, node: NodeType<TGraph>, fields: RelationQueryFields<TGraph, NodeType<TGraph>>): boolean {
-  return Object.entries(fields).reduce(
-    (result, [key, relationQueryField]) => result && matchesRelationQueryField(graph, node, key, relationQueryField!),
-    true as boolean
+  return Object.entries(fields).every(([key, relationQueryField]) => 
+    matchesRelationQueryField(graph, node, key, relationQueryField!)
   );
 }
 
@@ -74,7 +70,9 @@ export function matchesRelationQueryField<TGraph extends Graph>(graph: TGraph, n
   const relatedNodes = getRelatedNodes(graph, node, key);
 
   if (Array.isArray(field))
-    return relatedNodes.some(relNode => field.some(nodeQuery => matchesNodeQuery(graph, relNode, nodeQuery)));
+    return relatedNodes.some(relNode => field.some(nodeQuery => 
+      matchesNodeQuery(graph, relNode, nodeQuery)
+    ));
 
   return matchesCollectionOperator(relatedNodes, field);
 }

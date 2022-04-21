@@ -149,10 +149,7 @@ export function create<TGraph extends Graph, TN extends NodeType<TGraph>>(graph:
  */
 export function getCreateNodeInputs<TGraph extends Graph>(graph: TGraph, input: CreateInput<TGraph>) : NodeType<TGraph>[] {
   if (Array.isArray(input))
-    return input.reduce(
-      (result, inp) => [...result, ...getCreateNodeInputs(graph, inp)], 
-      [] as NodeType<TGraph>[]
-    );
+    return input.flatMap(inp => getCreateNodeInputs(graph, inp));
 
   const node = omitRelationFields<NodeType<TGraph>>(graph, input.type, input);
   const relationFields = pickRelationFields<CreateRelationFields<TGraph>>(graph, input.type, input);
@@ -185,10 +182,7 @@ export function getCreateNodeInputs<TGraph extends Graph>(graph: TGraph, input: 
  */
 export function getCreateEdgeInputs<TGraph extends Graph>(graph: TGraph, input: CreateInput<TGraph>, makeEdgeToParent?: CreateEdgeToParentCallback<TGraph>) : EdgeType<TGraph>[] {
   if (Array.isArray(input))
-    return input.reduce(
-      (result, inp) => [...result, ...getCreateEdgeInputs(graph, inp, makeEdgeToParent)], 
-      [] as EdgeType<TGraph>[]
-    );
+    return input.flatMap(inp => getCreateEdgeInputs(graph, inp, makeEdgeToParent));
   
   const nodeFields = omitRelationFields<CreateNodeInput<TGraph>>(graph, input.type, input);
   const relationFields = pickRelationFields<CreateRelationFields<TGraph>>(graph, input.type, input);
