@@ -1,4 +1,4 @@
-import { ensureArray, matchesEntityQuery, matchesOperator, omit, parseOperator, pick } from "..";
+import { ensureArray, matchesEntityQuery, omit, pick } from "..";
 
 
 describe('testing omit()', () => {
@@ -81,68 +81,6 @@ describe('testing pick()', () => {
 });
 
 
-describe('testing parseOperator()', () => {
-  it('should properly parse an object with a single key', () => {
-    const op = { eq: 5 };
-    const expected = { key: 'eq', rvalue: 5 };
-
-    const result = parseOperator(op);
-
-    expect(result).toMatchObject(expected);
-  });
-
-  it('should throw an exception if given an empty object', () => {
-    // @ts-expect-error
-    expect(() => parseOperator({})).toThrow();
-  });
-
-  it('should throw an error if given an object with more than one key', () => {
-    // @ts-expect-error
-    expect(() => parseOperator({ one: 1, two: 2 })).toThrow();
-  });
-});
-
-
-describe('testing matchesOperator()', () => {
-  it.each([
-    [5, { eq: 5 }],
-    [5, { ne: 10 }],
-    [5, { lt: 10 }],
-    [5, { lte: 5 }],
-    [5, { gt: 1 }],
-    [5, { gte: 5 }],
-    ['hello there', { re: /there/i }],
-    [[], { empty: true }],
-    [[5], { empty: false }],
-    [[3,4,5], { includes: 5 }],
-    [[3,4,5], { includes: [5, 6] }]
-  ])('should return true', (lvalue, operator) => {
-    expect(matchesOperator(lvalue, operator)).toBe(true);
-  });
-
-  it.each([
-    [5, { eq: 4 }],
-    [5, { ne: 5 }],
-    [5, { lt: 4 }],
-    [5, { lte: 4 }],
-    [5, { gt: 6 }],
-    [5, { gte: 6 }],
-    ['hello there', { re: /foo/i }],
-    [[], { empty: false }],
-    [[5], { empty: true }],
-    [[3,4,5], { includes: 6 }],
-    [[3,4,5], { includes: [6, 7]}]
-  ])('should return false', (lvalue, operator) => {
-    expect(matchesOperator(lvalue, operator)).toBe(false);
-  });
-
-  it('should throw an error if given an unrecognized operator', () => {
-    // @ts-expect-error
-    expect(() => matchesOperator(5, { foo: 'bar' })).toThrow();
-  });
-});
-
-
 describe('testing matchesEntityQuery()', () => {
   const obj = {
     id: '1',
@@ -157,7 +95,7 @@ describe('testing matchesEntityQuery()', () => {
     { type: 'dog', age: 5 },
     { type: ['dog', 'cat'], age: { lt: 10 } },
     { age: 5, name: { re: /fido/i } },
-    { housetrained: true, tricks: { empty: false } },
+    { housetrained: true, tricks: { length: { gt: 0 } } },
   ])('should return true for query %s', query => {
     expect(matchesEntityQuery(obj, query)).toBe(true);
   });

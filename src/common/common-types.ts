@@ -1,3 +1,4 @@
+import type { ExpressionFor, ExpressionMap } from "@garrettmk/ts-match";
 
 /**
  * Narrow a discriminated union by type.
@@ -51,81 +52,14 @@ export type Entity =
   & { id: ID }
   & { [key: string]: any };
 
-/**
- * A logical operation on a number.
- */
-export type NumericOperator =
-  | { eq: number }
-  | { ne: number }
-  | { lt: number }
-  | { lte: number }
-  | { gt: number }
-  | { gte: number };
 
-/**
- * A logical operation on a string.
- */
-export type StringOperator =
-  | { eq: string }
-  | { ne: string }
-  | { re: RegExp }
-  | { empty: boolean };
-
-/**
- * A logical operation on an array.
- */
-export type ArrayOperator<T = any> =
-  | { empty: boolean }
-  | { length: number | NumericOperator }
-  | { includes: T | T[] }
-
-/**
- * A logical operation on anything.
- */
-export type GenericOperator<T = any> =
-  | { eq: T }
-  | { ne: T };
-
-/**
- * A logical operator for a generic value.
- */
-export type EntityQueryOperator<T = any> =
-  T extends number ? NumericOperator :
-  T extends string ? StringOperator : 
-  T extends any[] ? ArrayOperator<T[0]> :
-  GenericOperator<T>;
-
-/**
- * Any of the various operator keys.
- */
-export type EntityQueryOperatorKey<T extends EntityQueryOperator<any> = EntityQueryOperator<any>> =
-  T extends EntityQueryOperator<any> ? keyof T : never;
-
-/**
- * An equivalent form of {@link EntityQueryOperator} that is easier to use while
- * processing a query.
- */
-export type ParsedQueryOperator<TOp extends EntityQueryOperator<any>, TK extends EntityQueryOperatorKey<TOp> = EntityQueryOperatorKey<TOp>> = {
-  key: EntityQueryOperatorKey<TOp>
-  rvalue: any
-}
-
-/**
- * A query field for some discrete value.
- */
-export type ValueQueryField<T> = 
-  | T                       // Implies equals
-  | T[]                     // Implies equals one of
-  | EntityQueryOperator<T>        // An explicit operator
 
 /**
  * A mapping of the fields in a type with the appropriate query operators.
  */
-export type EntityQueryFields<TEntity extends Entity> = {
-  [key in keyof TEntity]?: ValueQueryField<TEntity[key]>
-}
+export type EntityQueryFields<TEntity extends Entity> = ExpressionMap<TEntity>
 
 /**
  * A query for matching objects.
  */
-export type EntityQuery<TEntity extends Entity> = MaybeArray<EntityQueryFields<TEntity>>;
+export type EntityQuery<TEntity extends Entity> = ExpressionFor<TEntity>;

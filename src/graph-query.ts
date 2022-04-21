@@ -1,4 +1,5 @@
-import { ArrayOperator, EntityQuery, matchesEntityQuery, MaybeArray, parseOperator, pick, omit, ValidationError, EntityQueryFields } from "./common";
+import { ArrayExpression, matches } from "@garrettmk/ts-match";
+import { EntityQuery, matchesEntityQuery, MaybeArray, pick, omit, ValidationError, EntityQueryFields } from "./common";
 import { Node, Graph, NodeType, RelatedType, RelationsForType } from "./graph-types";
 import { getNode, getRelation, getRelationsForType, parseRelation } from './graph-utils';
 
@@ -29,7 +30,7 @@ export type RelationQueryFields<TGraph extends Graph, TN extends NodeType<TGraph
 // For relations, we can either use an ArrayOperator to match against the collection
 // itself, or an array of subqueries for appropriate type
 export type RelationQueryField<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>, key extends keyof RelationsForType<TGraph, TN> = keyof RelationsForType<TGraph, TN>> =
-  | ArrayOperator<never>
+  | ArrayExpression<never>
   | NodeQueryFields<TGraph, RelatedType<TGraph, TN, key>>[];
 
 
@@ -109,15 +110,7 @@ export function matchesNodeQuery<TGraph extends Graph>(graph: TGraph, node: Node
 }
 
 // Returns true if the list of related nodes is matched by the operator
-export function matchesCollectionOperator(collection: any[], operator: ArrayOperator<never>): boolean {
-  const { key, rvalue } = parseOperator(operator);
-
-  switch (key) {
-    case 'length':
-      return collection.length === rvalue;
-
-    default:
-      throw new ValidationError(`Not a valid collection operator: ${JSON.stringify(operator)}`, ['1'], 'ArrayOperator<never>', operator);
-  }
+export function matchesCollectionOperator(collection: any[], operator: ArrayExpression<never>): boolean {
+  // @ts-ignore
+  return matches(collection, operator);
 }
-
