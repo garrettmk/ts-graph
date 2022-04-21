@@ -70,6 +70,7 @@ export type NodeRef = OneKey<'id', ID>;
 export type NodeType<TGraph extends Graph> = TGraph['nodes'][0];
 export type EdgeType<TGraph extends Graph> = TGraph['edges'][0];
 export type RelationsType<TGraph extends Graph> = TGraph['relations'];
+export type RelationsKey<TGraph extends Graph, TType extends NodeType<TGraph>['type']> = keyof RelationsType<TGraph>[TType];
 
 export type SpecificNodeType<TGraph extends Graph, TypeKey extends string> = DiscriminateUnion<NodeType<TGraph>, 'type', TypeKey>;
 export type SpecificEdgeType<TGraph extends Graph, TypeKey extends string> = DiscriminateUnion<EdgeType<TGraph>, 'type', TypeKey>;

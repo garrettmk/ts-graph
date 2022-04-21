@@ -5,7 +5,7 @@
  */
 
 import { Entity, EntityQuery, ID } from "@/common";
-import { matches } from "@garrettmk/ts-match";
+import { matches, MaybeArray } from "@garrettmk/ts-match";
 
 
 export function isId(value: any) : value is ID {
@@ -54,4 +54,15 @@ export function omit<T extends {}, K extends keyof T>(obj: T, keys: Readonly<K[]
 
 export function ensureArray<T>(input: T | T[]) : T[] {
   return Array.isArray(input) ? input : [input];
+}
+
+export function concatResults<TInput, TOutput>(input: TInput[], fn: (inp: TInput) => TOutput[]) : TOutput[] {
+  return input.flatMap(inp => fn(inp));
+}
+
+export function maybeConcatResults<TInput, TOutput>(input: MaybeArray<TInput>, fn: (inp: TInput) => TOutput[]) : TOutput[] {
+  if (Array.isArray(input))
+    return concatResults(input, fn);
+
+  return fn(input);
 }

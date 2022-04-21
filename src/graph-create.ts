@@ -1,7 +1,7 @@
 import { EdgeType, isNotNodeRef, omitRelationFields, pickRelationFields } from ".";
-import { MaybeArray, ensureArray } from "./common";
+import { MaybeArray, ensureArray, maybeConcatResults, concatResults } from "./common";
 import { Graph, NodeRef, NodeType, RelatedType, RelationsForType } from "./graph-types";
-import { addEdge, addNode, addType, getRelation, isNodeRef, parseRelation } from './graph-utils';
+import { addEdge, addNode, addType, getParsedRelation, getRelation, isNodeRef, parseRelation } from './graph-utils';
 
 
 export type CreateInput<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>> =
@@ -12,11 +12,14 @@ export type CreateNodeInput<TGraph extends Graph, TN extends NodeType<TGraph> = 
   & CreateRelationFields<TGraph, TN>
   
 export type CreateRelationFields<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>> = { 
-  [key in keyof RelationsForType<TGraph, TN>]?: MaybeArray<CreateRelationField<TGraph, TN, key> | NodeRef>
+  [key in keyof RelationsForType<TGraph, TN>]?: CreateRelationField<TGraph, TN, key>
 }
 
 export type CreateRelationField<TGraph extends Graph, TN extends NodeType<TGraph> = NodeType<TGraph>, key extends keyof RelationsForType<TGraph, TN> = keyof RelationsForType<TGraph, TN>> =
-  CreateNodeInput<TGraph, RelatedType<TGraph, TN, key>>;
+  MaybeArray<
+    | CreateNodeInput<TGraph, RelatedType<TGraph, TN, key>>
+    | NodeRef
+  >;
 
 
 type CreateEdgeToParentCallback<TGraph extends Graph> = (node: NodeType<TGraph>) => EdgeType<TGraph>
@@ -131,7 +134,7 @@ type CreateEdgeToParentCallback<TGraph extends Graph> = (node: NodeType<TGraph>)
  *```
  */
 export function create<TGraph extends Graph, TN extends NodeType<TGraph>>(graph: TGraph, input: CreateInput<TGraph, TN>) : TGraph {
-  const createNodeInputs = getCreateNodeInputs(graph, input);
+  const createNodeInputs = getNodeDefinitions(graph, input);
   const createEdgeInputs = getCreateEdgeInputs(graph, input);
 
   graph = createNodeInputs.reduce(addNode, graph);
@@ -147,30 +150,53 @@ export function create<TGraph extends Graph, TN extends NodeType<TGraph>>(graph:
  * @param input The input passed to `create()`.
  * @returns An array of `Node`s to add to the input graph.
  */
-export function getCreateNodeInputs<TGraph extends Graph>(graph: TGraph, input: CreateInput<TGraph>) : NodeType<TGraph>[] {
-  if (Array.isArray(input))
-    return input.flatMap(inp => getCreateNodeInputs(graph, inp));
-
-  const node = omitRelationFields<NodeType<TGraph>>(graph, input.type, input);
-  const relationFields = pickRelationFields<CreateRelationFields<TGraph>>(graph, input.type, input);
-  
-  const relatedNodeFields: CreateNodeInput<TGraph>[] = Object.entries(relationFields).reduce(
-    (result, [key, relationField]) => {
-      if (!relationField) return result;
-
-      const relation = getRelation(graph, input.type, key);
-      const { relatedType } = parseRelation(relation);      
-      const createNodeInputs = ensureArray(relationField)
-        .filter(isNotNodeRef)
-        .map(item => addType(relatedType, item));
-
-      return [...result, ...getCreateNodeInputs(graph, createNodeInputs as CreateInput<TGraph>)];
-    },
-    [] as CreateNodeInput<TGraph>[]
-  );
-
-  return [node, ...relatedNodeFields];
+function getNodeDefinitions<TGraph extends Graph>(graph: TGraph, input: CreateInput<TGraph>) : NodeType<TGraph>[] {
+  return maybeConcatResults(input, inp => flattenCreateNodeInput(graph, inp));
 }
+
+
+/**
+ * @internal
+ * @param graph 
+ * @param input 
+ * @returns An array containing the `Node` defined by the input, as well as any `Node`s defined in
+ * relation keys.
+ * 
+ * A CreateNodeInput is basically a `Node` with extra keys for relations, containing `MaybeArray`'s
+ * of with more `Node` definitions. This function flattens all those `Node` definitions into a single
+ * array.
+ */
+function flattenCreateNodeInput<TGraph extends Graph>(graph: TGraph, input: CreateNodeInput<TGraph>) : NodeType<TGraph>[] {
+  const node = omitRelationFields(graph, input.type, input) as NodeType<TGraph>;
+  const relationFields = pickRelationFields(graph, input.type, input) as CreateRelationFields<TGraph>;
+  const relatedNodes = relationFieldsToNodes(graph, node, relationFields);
+
+  return [node, ...relatedNodes];
+}
+
+/**
+ * Takes a map of relation keys to CreateRelationField's, and returns an array
+ * @param graph 
+ * @param node 
+ * @param relationFields 
+ * @returns An array of node definitions
+ */
+function relationFieldsToNodes<TGraph extends Graph, TN extends NodeType<TGraph>>(graph: TGraph, node: TN, relationFields: CreateRelationFields<TGraph, TN>) : NodeType<TGraph>[] {
+  const createNodeInputs = relationFieldsToCreateInput(graph, node, relationFields);
+
+  return getNodeDefinitions(graph, createNodeInputs);
+}
+
+function relationFieldsToCreateInput<TGraph extends Graph, TN extends NodeType<TGraph>>(graph: TGraph, node: TN, relationFields: CreateRelationFields<TGraph, TN>) : CreateInput<TGraph> {
+  return Object.entries(relationFields).flatMap(([relationKey, relationField]) => {
+    const { relatedType } = getParsedRelation(graph, node.type, relationKey);
+    
+    return ensureArray(relationField!)
+      .filter(isNotNodeRef)
+      .map(item => addType(relatedType, item)) as CreateNodeInput<TGraph>[];
+  });
+}
+
 
 
 /**

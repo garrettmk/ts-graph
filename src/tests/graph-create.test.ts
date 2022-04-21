@@ -1,4 +1,4 @@
-import { create, CreateInput, Node, Edge, Graph, hasNode, ID, Relations, hasEdge, getCreateNodeInputs, CreateNodeInput } from "..";
+import { create, CreateInput, Edge, Graph, hasEdge, hasNode, Node } from "..";
 
 
 interface TestNode extends Node {
@@ -120,46 +120,5 @@ describe('testing create()', () => {
       to: 'two',
       type: 'tests'
     }));
-  });
-});
-
-
-describe('testing getCreateNodeInputs()', () => {
-  const graph: TestGraph = { nodes: [], edges: [], relations: testRelations };
-  const inputs: CreateNodeInput<TestGraph>[] = [
-    {
-      id: '1',
-      type: 'node',
-      value: 1
-    },
-    {
-      id: '2',
-      type: 'node',
-      value: 2
-    },
-  ];
-
-  it('should return an array with one create input if given a single create input', () => {
-    const input = inputs[0];
-    const expected = [input];
-
-    expect(getCreateNodeInputs(graph, input)).toMatchObject(expected);
-  });
-
-  it('should return an array matching the input, if given an array of simple inputs', () => {
-    const input: CreateInput<TestGraph> = [inputs[0], inputs[1]];
-    const expected = input;
-
-    expect(getCreateNodeInputs(graph, input)).toMatchObject(expected);
-  });
-
-  it('should return an array with two create inputs, if given two nested inputs', () => {
-    const input: CreateInput<TestGraph> = {
-      ...inputs[0],
-      tests: inputs[1]
-    };
-    const expected = [inputs[0], inputs[1]];
-
-    expect(getCreateNodeInputs(graph, input)).toMatchObject(expected);
   });
 });

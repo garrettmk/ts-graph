@@ -1,6 +1,6 @@
 import { NodeRef } from ".";
 import { AlreadyExistsError, ID, MaybeArray, NotFoundError, omit, pick } from "./common";
-import { Edge, EdgeType, Graph, Node, NodeType, ParsedRelation, Relation, RelationsType } from "./graph-types";
+import { Edge, EdgeType, Graph, Node, NodeType, ParsedRelation, Relation, RelationsKey } from "./graph-types";
 
 
 function withSameId(node: Node) {
@@ -134,7 +134,7 @@ export function getRelationsForType<TGraph extends Graph>(graph: TGraph, type: N
 }
 
 // Get a specific relation
-export function getRelation<TGraph extends Graph>(graph: TGraph, type: NodeType<TGraph>['type'], key: keyof RelationsType<TGraph>[typeof type]) : Relation<NodeType<TGraph>, EdgeType<TGraph>> {
+export function getRelation<TGraph extends Graph>(graph: TGraph, type: NodeType<TGraph>['type'], key: RelationsKey<TGraph, typeof type>) : Relation<NodeType<TGraph>, EdgeType<TGraph>> {
   return getRelationsForType(graph, type)[key];
 }
 
@@ -146,6 +146,12 @@ export function parseRelation<TGraph extends Graph>(relation: Relation<NodeType<
   const edgeType = relation.type as EdgeType<TGraph>['type'];
 
   return { direction, otherDirection, relatedType, edgeType };
+}
+
+// Chains getRelation() and parseRelation()
+export function getParsedRelation<TGraph extends Graph>(graph: TGraph, type: NodeType<TGraph>['type'], key: RelationsKey<TGraph, typeof type>) : ParsedRelation<TGraph> {
+  const relation = getRelation(graph, type, key);
+  return parseRelation(relation);
 }
 
 // Add a "type" parameter to an object or array of objects
